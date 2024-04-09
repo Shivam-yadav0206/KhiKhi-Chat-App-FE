@@ -1,8 +1,14 @@
-import Image from "next/image";
+import Button from "@/components/ui/Button";
+//import Image from "next/image";
+import { db } from "@/lib/db";
 
-export default function Home() {
+
+export default async function Home() {
+  await db.set('hello', 'hello');
   return (
-<p className="text-red-500">Hello</p>
+    //<p className="text-red-500">Hello</p>
+    <><p className="text-red-500">qwertko</p>
+    <Button variant='ghost' isLoading={false} size='default'>ClickMe</Button></>
   );
 }
     // <main className="flex min-h-screen flex-col items-center justify-between p-24">
