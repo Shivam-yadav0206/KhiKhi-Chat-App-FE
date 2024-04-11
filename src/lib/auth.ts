@@ -34,10 +34,11 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      const dbUser = (await db.get(`user: ${token.id}`)) as User | null;
+      const dbUser = (await db.get(`user:${token?.id}`)) as User | null;
+
 
       if (!dbUser) {
-        token.id = user!.id;
+        token.id = user?.id;
         return token;
       }
 
@@ -50,15 +51,17 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-          session.user.id = token.id;
-          session.user.name = token.name;
-          session.user.email = token.email;
-          session.user.image = token.picture
-        }
-        return session;
-      },
-      redirect() {
-        return '/dashboard'
-    }
+        session.user = session.user || {};
+        session.user.id = token?.id;
+        session.user.name = token?.name;
+        session.user.email = token?.email;
+        session.user.image = token?.picture;
+      }
+      return session;
+    },
+
+    redirect() {
+      return "/dashboard";
+    },
   },
 };
