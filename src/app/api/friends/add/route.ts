@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
     console.log("ID To Add", idToAdd);
     console.log("Session ID", session.user.id);
-    db.sadd(`user: ${idToAdd}:incoming_friend_requests`, session.user.id);
+    db.sadd(`user:${idToAdd}:incoming_friend_requests`, session.user.id);
     return new Response("OK");
   } catch (error) {
     //console.log(error);
