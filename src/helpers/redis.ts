@@ -43,7 +43,7 @@ export async function fetchRedis(
   ...args: (string | number)[]
 ) {
   const commandUrl = `${upstashRedisRestUrl}/${command}/${args.join("/")}`;
-  console.log("Command URL", commandUrl);
+  //console.log("Command URL", commandUrl);
 
   try {
     const response = await fetch(commandUrl, {

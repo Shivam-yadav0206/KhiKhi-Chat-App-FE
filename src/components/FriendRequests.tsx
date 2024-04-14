@@ -1,49 +1,75 @@
 "use client";
+import { pusherClient } from "@/lib/pusher";
+import { toPusherKey } from "@/lib/utils";
 import axios from "axios";
-import { request } from "http";
-import { Check, UserPlus,X } from "lucide-react";
+import { Check, UserPlus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
 interface FriendRequestsProps {
   friendRequests: IncomingFriendRequest[];
   sessionId: string;
 }
 
-
 export const FriendRequests: FC<FriendRequestsProps> = ({
   friendRequests,
   sessionId,
 }) => {
-   const router = useRouter();
+  const router = useRouter();
   const [incomingFriendRequests, setIncomingFriendRequests] =
     useState<IncomingFriendRequest[]>(friendRequests);
   
- 
-  const acceptFriend = async (senderId: string) =>{
-    await axios.post('/api/friends/accept', { id: senderId })
-    
-    setIncomingFriendRequests((prev) => 
+  
+  useEffect(() => {
+    pusherClient.subscribe(
+      toPusherKey(`user:${sessionId}:incoming_friend_requests`)
+    );
+
+    const friendRequestHandler = ({
+      senderId,
+      senderEmail,
+    }: IncomingFriendRequest) => {
+      console.log("new friend request");
+      setIncomingFriendRequests((prev) => [...prev, { senderId, senderEmail }]);
+    };
+
+    pusherClient.bind("incoming_friend_requests", friendRequestHandler);
+
+    return () => {
+      pusherClient.unsubscribe(
+        toPusherKey(`user:${sessionId}:incoming_friend_requests`)
+      );
+      pusherClient.unbind("incoming_friend_requests", friendRequestHandler);
+    };
+  }, []);
+
+  const acceptFriend = async (senderId: string) => {
+    await axios.post("/api/friends/accept", { id: senderId });
+
+    setIncomingFriendRequests((prev) =>
       prev.filter((request) => request.senderId !== senderId)
-    )
+    );
 
     router.refresh();
-  }
-  const denyFriend = async (senderId: string) =>{
-    await axios.post('/api/friends/deny', { id: senderId })
-    
-    setIncomingFriendRequests((prev) => 
+  };
+
+  const denyFriend = async (senderId: string) => {
+    await axios.post("/api/friends/deny", { id: senderId });
+
+    setIncomingFriendRequests((prev) =>
       prev.filter((request) => request.senderId !== senderId)
-    )
+    );
 
     router.refresh();
-  }
+  };
+
+
   return (
     <>
-      {friendRequests.length === 0 ? (
+      {incomingFriendRequests?.length === 0 ? (
         <p>Nothing to show here...</p>
       ) : (
-        friendRequests.map((request) => (
+        incomingFriendRequests?.map((request) => (
           <div key={request.senderId} className="flex gap-4 items-center">
             <UserPlus className="text-black" />
             <p className="font-medium text-lg">{request.senderEmail}</p>

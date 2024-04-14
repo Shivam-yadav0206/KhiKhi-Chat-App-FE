@@ -36,8 +36,8 @@ const Layout = async ({ children }: Props) => {
   if (!session) notFound();
 
   const friends = await getFriendsByUserId(session?.user?.id);
-  console.log(friends);
-  //  const friends: User[] = [];
+  //console.log(friends);
+
 
   const unseenRequestCount = (
     (await fetchRedis(
