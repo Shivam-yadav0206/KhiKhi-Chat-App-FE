@@ -26,7 +26,7 @@ const AddFriendButton: FunctionComponent<Props> = ({}) => {
       await axios.post("/api/friends/add", { email: validatedEmail });
       setShowSuccess(true);
     } catch (error) {
-      console.log(error);
+      //console.log(error);
       if (error instanceof z.ZodError) {
         setError("email", { message: error.message });
         return;
