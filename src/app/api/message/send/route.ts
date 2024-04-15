@@ -5,11 +5,13 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { nanoid } from "nanoid";
 import { messageValidator } from "@/lib/validations/message";
+import { pusherServer } from "@/lib/pusher";
+import { toPusherKey } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
     const { text, chatId } = await req.json();
-    console.log("text", text);
+    //console.log("text", text);
     const session = await getServerSession(authOptions);
     if (!session) {
       return new Response("Unauthorized", { status: 401 });
@@ -28,13 +30,19 @@ export async function POST(req: Request) {
       receiverId
     );
 
-    console.log(areFriends);
+    //console.log(areFriends);
 
     if (!areFriends) {
       return new Response("You can only send messages to your friends", {
         status: 400,
       });
     }
+
+    const rawSender = (await fetchRedis(
+      "get",
+      `user:${session.user.id}`
+    )) as string;
+    const sender = JSON.parse(rawSender) as User;
 
     const timestamp = Date.now();
     const messageData: Message = {
@@ -47,12 +55,24 @@ export async function POST(req: Request) {
 
     const message = messageValidator.parse(messageData);
 
-    console.log(message);
+    //.log(message);
 
     await db.zadd(`chat:${chatId}:messages`, {
       score: timestamp,
       member: JSON.stringify(message),
     });
+
+    pusherServer.trigger(
+      toPusherKey(`chat:${chatId}:messages`),
+      "messages",
+      message
+    );
+
+    pusherServer.trigger(
+      toPusherKey(`user:${receiverId}:chats`),
+      "new_message",
+      { ...message, senderImg: sender.image, senderName: sender.name }
+    );
 
     return new Response("Message Sent!!!"); // Success response
   } catch (error) {

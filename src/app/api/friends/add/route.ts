@@ -58,15 +58,15 @@ export async function POST(req: Request) {
     // console.log("Session ID", session.user.id);
     await db.sadd(`user:${idToAdd}:incoming_friend_requests`, session.user.id);
 
-pusherServer.trigger(
-  toPusherKey(
-    `user:${idToAdd}:incoming_friend_requests`),
-    'incoming_friend_requests',
-    {
-      senderId: session.user.id,
-      senderEmail: session.user.email
-    }
-);
+    pusherServer.trigger(
+      toPusherKey(
+        `user:${idToAdd}:incoming_friend_requests`),
+        'incoming_friend_requests',
+        {
+          senderId: session.user.id,
+          senderEmail: session.user.email
+        }
+    );
 
 
     return new Response("OK");

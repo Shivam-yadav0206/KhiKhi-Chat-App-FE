@@ -29,7 +29,7 @@ export const FriendRequests: FC<FriendRequestsProps> = ({
       senderId,
       senderEmail,
     }: IncomingFriendRequest) => {
-      console.log("new friend request");
+      //console.log("new friend request");
       setIncomingFriendRequests((prev) => [...prev, { senderId, senderEmail }]);
     };
 
@@ -41,7 +41,7 @@ export const FriendRequests: FC<FriendRequestsProps> = ({
       );
       pusherClient.unbind("incoming_friend_requests", friendRequestHandler);
     };
-  }, []);
+  }, [sessionId]);
 
   const acceptFriend = async (senderId: string) => {
     await axios.post("/api/friends/accept", { id: senderId });

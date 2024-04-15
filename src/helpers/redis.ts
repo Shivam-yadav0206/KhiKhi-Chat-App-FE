@@ -26,7 +26,7 @@
 //   });
 
 //   if (!response.ok) {
-//     //console.log(upstashRedisRestUrl, authToken, commandUrl);
+//     console.log(upstashRedisRestUrl, authToken, commandUrl);
 //     throw new Error(`Error executing Redis command: ${response?.statusText}`);
 //   }
 
@@ -60,7 +60,7 @@ export async function fetchRedis(
     const data = await response.json();
     return data.result;
   } catch (error) {
-    console.error("Error fetching data from Redis:", error);
+    //console.error("Error fetching data from Redis:", error);
     throw error; // Re-throw the error to propagate it further if needed
   }
 }

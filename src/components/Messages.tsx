@@ -1,14 +1,15 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { FC, useRef, useState } from "react";
+import { FC, useRef, useState, useEffect } from "react";
 import Image from "next/image";
-//import { format } from "date-fns";
-
+import { toPusherKey } from "@/lib/utils";
+import { pusherClient } from "@/lib/pusher";
 interface MessagesProps {
   initailMessages: Message[];
   sessionId: string;
   sessionImg: string | null | undefined;
   chatPartner: User;
+  chatId: string | null | undefined;
 }
 
 const Messages: FC<MessagesProps> = ({
@@ -16,9 +17,27 @@ const Messages: FC<MessagesProps> = ({
   sessionId,
   sessionImg,
   chatPartner,
+  chatId,
 }) => {
   const scrollDownRef = useRef<HTMLDivElement | null>(null);
   const [messages, setMessages] = useState<Message[]>(initailMessages);
+
+  useEffect(() => {
+    pusherClient.subscribe(toPusherKey(`chat:${chatId}:messages`));
+
+    const newMessageHandler = (message: Message) => {
+      setMessages((prev) => [message, ...prev]);
+    }
+
+    pusherClient.bind("messages", newMessageHandler);
+
+    return () => {
+      pusherClient.unsubscribe(
+        toPusherKey(toPusherKey(`chat:${chatId}:messages`))
+      );
+      pusherClient.unbind("messages", newMessageHandler);
+    };
+  }, [chatId]);
 
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -42,7 +61,7 @@ const Messages: FC<MessagesProps> = ({
         return (
           <div
             className="chat-message"
-            key={`${message.id}-${message.timestamp}`}>
+            key={`${message?.id}-${message?.timestamp}`}>
             <div
               className={cn("flex items-end", {
                 "justify-end": isCurrentUser,

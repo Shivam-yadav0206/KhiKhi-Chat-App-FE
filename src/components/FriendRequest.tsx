@@ -5,7 +5,6 @@ import { User } from "lucide-react";
 import { pusherClient } from "@/lib/pusher";
 import { toPusherKey } from "@/lib/utils";
 
-
 interface FriendRequestProps {
   sessionId: string;
   initialUnseenRequestCount: number;
@@ -15,17 +14,18 @@ const FriendRequest: FC<FriendRequestProps> = ({
   sessionId,
   initialUnseenRequestCount,
 }: FriendRequestProps) => {
+  const [unseenRequestCount, setUnseenRequestCount] = useState<number>(
+    initialUnseenRequestCount
+  );
 
-  const [unseenRequestCount, setUnseenRequestCount] = useState<number>(initialUnseenRequestCount)
-  
   useEffect(() => {
     pusherClient.subscribe(
       toPusherKey(`user:${sessionId}:incoming_friend_requests`)
     );
 
-    const newFriendRequestHandler = () =>{
-  setUnseenRequestCount(prev => prev+=1)
-}
+    const newFriendRequestHandler = () => {
+      setUnseenRequestCount((prev) => (prev += 1));
+    };
 
     pusherClient.bind("incoming_friend_requests", newFriendRequestHandler);
 
@@ -35,7 +35,7 @@ const FriendRequest: FC<FriendRequestProps> = ({
       );
       pusherClient.unbind("incoming_friend_requests", newFriendRequestHandler);
     };
-  }, []);
+  }, [sessionId]);
 
   return (
     <Link
