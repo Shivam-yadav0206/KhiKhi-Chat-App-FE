@@ -19,7 +19,9 @@ const Page: FunctionComponent<Props> = ({}) => {
   async function loginWithGoogle() {
     setIsLoading(true);
       try {
-      await signIn("google");
+      await signIn("google", {
+        callbackUrl: "https://khi-khi-chat-app-fe.vercel.app/dashboard",
+      });
     } catch (error) {
       toast.error("Something went wrong");
     } finally {
