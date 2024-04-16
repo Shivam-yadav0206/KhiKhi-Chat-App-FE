@@ -6,6 +6,7 @@ export default withAuth(
   async function middleware(req) {
     const pathname = req.nextUrl.pathname;
 
+    // Manage route protection
     const isAuth = await getToken({ req });
     const isLoginPage = pathname.startsWith("/login");
 
@@ -40,5 +41,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/", "/login", "/dashboard/:path*"],
+  matchter: ["/", "/login", "/dashboard/:path*"],
 };
