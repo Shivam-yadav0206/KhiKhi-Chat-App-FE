@@ -1,6 +1,5 @@
 import { UpstashRedisAdapter } from "@next-auth/upstash-redis-adapter";
 import { NextAuthOptions } from "next-auth";
-import { db } from "./db";
 import GoogleProvider from "next-auth/providers/google";
 import { fetchRedis } from "@/helpers/redis";
 
@@ -14,10 +13,12 @@ function getGoogleCredentials() {
     clientId.length === 0 ||
     clientSecret.length === 0
   ) {
-    throw new Error("Missing Google credentials");
+    throw new Error("Missing or invalid Google credentials");
   }
   return { clientId, clientSecret };
 }
+
+const { clientId, clientSecret } = getGoogleCredentials(); // Singleton pattern
 
 export const authOptions: NextAuthOptions = {
   adapter: UpstashRedisAdapter(db),
@@ -29,28 +30,34 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     GoogleProvider({
-      clientId: getGoogleCredentials().clientId,
-      clientSecret: getGoogleCredentials().clientSecret,
+      clientId,
+      clientSecret,
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      //const dbUser = (await db.get(`user:${token?.id}`)) as User | null;
-      const dbUserResult = (await fetchRedis('get',`user:${token?.id}`)) as string | null;
+      try {
+        const dbUserResult = (await fetchRedis("get", `user:${token?.id}`)) as
+          | string
+          | null;
 
-      if (!dbUserResult) {
-        token.id = user?.id;
-        return token;
+        if (!dbUserResult) {
+          token.id = user?.id;
+          return token;
+        }
+
+        const dbUser = JSON.parse(dbUserResult) as User;
+
+        return {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          picture: dbUser.image,
+        };
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        return token; // Return token unchanged in case of error
       }
-
-      const dbUser = JSON.parse(dbUserResult) as User;
-
-      return {
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        picture: dbUser.image,
-      };
     },
     async session({ session, token }) {
       if (token) {
@@ -62,7 +69,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-
     redirect() {
       return "/dashboard";
     },
