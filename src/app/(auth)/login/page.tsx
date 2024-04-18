@@ -18,12 +18,11 @@ const Page: FunctionComponent<Props> = ({}) => {
 
   async function loginWithGoogle() {
     setIsLoading(true);
-      try {
-      await signIn("google", {
-        callbackUrl: "https://khi-khi-chat-app-fe.vercel.app/dashboard",
-      });
+    try {
+      await signIn("google");
     } catch (error) {
-      toast.error("Something went wrong");
+      // display error message to user
+      toast.error("Something went wrong with your login.");
     } finally {
       setIsLoading(false);
     }
